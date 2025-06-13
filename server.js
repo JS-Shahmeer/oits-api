@@ -1,6 +1,8 @@
 const express = require("express");
 const cors = require("cors");
 const contactRoute = require("./routes/contact");
+const consultationRoute = require("./routes/consultation");
+const thirdformRoute = require("./routes/thirdform");
 
 require("dotenv").config();
 
@@ -9,6 +11,8 @@ app.use(cors());
 app.use(express.json());
 app.use("/uploads", express.static("uploads")); // serve uploaded files
 app.use("/api/contact", contactRoute);
+app.use("/api/consultation", consultationRoute);
+app.use("/api/thirdform", thirdformRoute);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
