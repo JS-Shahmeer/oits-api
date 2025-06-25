@@ -3,6 +3,7 @@ const cors = require("cors");
 const contactRoute = require("./routes/contact");
 const consultationRoute = require("./routes/consultation");
 const thirdformRoute = require("./routes/thirdform");
+const socialChecklistRoute = require("./routes/socialChecklist");
 
 require("dotenv").config();
 
@@ -13,6 +14,7 @@ app.use("/uploads", express.static("uploads")); // serve uploaded files
 app.use("/api/contact", contactRoute);
 app.use("/api/consultation", consultationRoute);
 app.use("/api/thirdform", thirdformRoute);
+app.use("/api/socialChecklist", socialChecklistRoute);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
