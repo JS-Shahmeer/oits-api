@@ -9,10 +9,10 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 // POST /api/consultation
 router.post("/", upload.single("file"), async (req, res) => {
-  const { fullName, email, number, message, privacy } = req.body;
+  const { fullName, email, country, number, message, privacy } = req.body;
   const file = req.file;
 
-  if (!fullName || !email || !number || !message || !privacy) {
+  if (!fullName || !email || !country || !number || !message || !privacy) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
@@ -23,12 +23,13 @@ router.post("/", upload.single("file"), async (req, res) => {
     }
 
     const query = `
-      INSERT INTO consultations (fullName, email, number, message, file)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO consultations (fullName, email, country, number, message, file)
+      VALUES (?, ?, ?, ?, ?, ?)
     `;
     const values = [
       fullName,
       email,
+      country,
       number,
       message,
       file ? file.originalname : null,
@@ -66,6 +67,7 @@ router.post("/", upload.single("file"), async (req, res) => {
             <h3>New Consultation Submission</h3>
             <p><strong>Name:</strong> ${fullName}</p>
             <p><strong>Email:</strong> ${email}</p>
+            <p><strong>Country:</strong> ${country}</p>
             <p><strong>Number:</strong> ${number}</p>
             <p><strong>Message:</strong> ${message}</p>
           `,

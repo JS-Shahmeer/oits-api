@@ -9,10 +9,10 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 // POST /api/socialPresence
 router.post("/", upload.single("file"), async (req, res) => {
-  const { fullName, email, number, message, privacy } = req.body;
+  const { fullName, email, number, country, message, privacy } = req.body;
   const file = req.file;
 
-  if (!fullName || !email || !number || !message || !privacy) {
+  if (!fullName || !email || !number || !country || !message || !privacy) {
     return res.status(400).json({ error: "Missing required fields" });
   }
 
@@ -23,13 +23,14 @@ router.post("/", upload.single("file"), async (req, res) => {
     }
 
     const query = `
-      INSERT INTO social_presence_requests (full_name, email, number, message, file_name)
-      VALUES (?, ?, ?, ?, ?)
-    `;
+    INSERT INTO social_presence_requests (full_name, email, number, country, message, file_name)
+    VALUES (?, ?, ?, ?, ?, ?)
+        `;
     const values = [
       fullName,
       email,
       number,
+      country,
       message,
       file ? file.originalname : null,
     ];
@@ -66,6 +67,7 @@ router.post("/", upload.single("file"), async (req, res) => {
             <p><strong>Name:</strong> ${fullName}</p>
             <p><strong>Email:</strong> ${email}</p>
             <p><strong>Number:</strong> ${number}</p>
+            <p><strong>Country:</strong> ${country}</p>
             <p><strong>Message:</strong> ${message}</p>
           `,
           attachments: file

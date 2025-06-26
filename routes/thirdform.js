@@ -6,10 +6,10 @@ require("dotenv").config();
 
 router.post("/", async (req, res) => {
   try {
-    const { fullName, email, phone, message, privacy, services } = req.body;
+    const { fullName, email, phone, country, message, privacy, services } = req.body;
 
     // Validation
-    if (!fullName || !email || !phone || !message || !privacy) {
+    if (!fullName || !email || !phone || !country || !message || !privacy) {
       return res.status(400).json({ error: "All fields are required." });
     }
 
@@ -22,10 +22,10 @@ router.post("/", async (req, res) => {
     // Insert into DB
     const sql = `
       INSERT INTO third_form_submissions 
-      (full_name, email, phone, message, services, privacy) 
-      VALUES (?, ?, ?, ?, ?, ?)
+      (full_name, email, phone, country, message, services, privacy) 
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
-    const values = [fullName, email, phone, message, servicesStr, privacy];
+    const values = [fullName, email, phone, country, message, servicesStr, privacy];
 
     db.query(sql, values, (err, result) => {
       if (err) {
@@ -59,6 +59,7 @@ router.post("/", async (req, res) => {
             <p><strong>Full Name:</strong> ${fullName}</p>
             <p><strong>Email:</strong> ${email}</p>
             <p><strong>Phone:</strong> ${phone}</p>
+            <p><strong>Country:</strong> ${country}</p>
             <p><strong>Services:</strong> ${servicesStr}</p>
             <p><strong>Message:</strong> ${message}</p>
           `,
