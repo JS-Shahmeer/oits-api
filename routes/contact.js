@@ -10,7 +10,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 // POST /api/contact
 router.post("/", upload.single("file"), async (req, res) => {
-  const { fullName, email, phone, services, comments } = req.body;
+  const { fullName, email, phone, services, comments, country } = req.body;
   const file = req.file;
 
   // Use connection pool to get a connection
@@ -20,14 +20,15 @@ router.post("/", upload.single("file"), async (req, res) => {
       return res.status(500).json({ error: "Database connection error" });
     }
 
-    const query = `INSERT INTO contacts (name, email, phone, services, comments, file) VALUES (?, ?, ?, ?, ?, ?)`;
+    const query = `INSERT INTO contacts (name, email, phone, country, services, comments, file) VALUES (?, ?, ?, ?, ?, ?, ?)`;
     const values = [
       fullName,
       email,
       phone,
+      country,
       services,
       comments,
-      file ? file.originalname : null, // store original filename
+      file ? file.originalname : null,
     ];
 
     connection.query(query, values, (err, result) => {
@@ -64,6 +65,7 @@ router.post("/", upload.single("file"), async (req, res) => {
             <p><strong>Name:</strong> ${fullName}</p>
             <p><strong>Email:</strong> ${email}</p>
             <p><strong>Phone:</strong> ${phone}</p>
+            <p><strong>Country:</strong> ${country}</p>
             <p><strong>Services:</strong> ${services}</p>
             <p><strong>Comments:</strong> ${comments}</p>
           `,
@@ -82,7 +84,9 @@ router.post("/", upload.single("file"), async (req, res) => {
             console.error("Email Error:", emailErr);
             return res.status(500).json({ error: "Email sending failed" });
           }
-          return res.status(200).json({ message: "Form submitted successfully" });
+          return res
+            .status(200)
+            .json({ message: "Form submitted successfully" });
         });
       });
     });
