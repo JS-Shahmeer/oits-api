@@ -5,6 +5,7 @@ const consultationRoute = require("./routes/consultation");
 const thirdformRoute = require("./routes/thirdform");
 const socialChecklistRoute = require("./routes/socialChecklist");
 const socialPresenceRoute = require("./routes/socialPresence");
+const newsletterRoute = require("./routes/newsletter");
 
 require("dotenv").config();
 
@@ -17,6 +18,7 @@ app.use("/api/consultation", consultationRoute);
 app.use("/api/thirdform", thirdformRoute);
 app.use("/api/socialChecklist", socialChecklistRoute);
 app.use("/api/socialPresence", socialPresenceRoute);
+app.use("/api/newsletter", newsletterRoute);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
