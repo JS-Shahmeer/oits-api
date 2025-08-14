@@ -1,11 +1,10 @@
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
-const nodemailer = require("nodemailer");
 const db = require("../db");
+const sendEmail = require("../utils/sendEmail"); // ✅ reusable email function
 require("dotenv").config();
 
-// ✅ Use memory storage for Vercel compatibility
 const upload = multer({ storage: multer.memoryStorage() });
 
 // POST /api/contact
@@ -13,14 +12,20 @@ router.post("/", upload.single("file"), async (req, res) => {
   const { fullName, email, phone, services, comments, country } = req.body;
   const file = req.file;
 
-  // Use connection pool to get a connection
+  if (!fullName || !email || !phone || !services || !comments || !country) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
   db.getConnection((connErr, connection) => {
     if (connErr) {
       console.error("Connection Error:", connErr);
       return res.status(500).json({ error: "Database connection error" });
     }
 
-    const query = `INSERT INTO contacts (name, email, phone, country, services, comments, file) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+    const query = `
+      INSERT INTO contacts (name, email, phone, country, services, comments, file)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
     const values = [
       fullName,
       email,
@@ -31,33 +36,17 @@ router.post("/", upload.single("file"), async (req, res) => {
       file ? file.originalname : null,
     ];
 
-    connection.query(query, values, (err, result) => {
-      connection.release(); // release connection back to pool
+    connection.query(query, values, async (err, result) => {
+      connection.release();
 
       if (err) {
         console.error("DB Error:", err);
         return res.status(500).json({ error: "Database error" });
       }
 
-      // Set up nodemailer with Hostinger SMTP
-      const transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST,
-        port: parseInt(process.env.EMAIL_PORT),
-        secure: process.env.EMAIL_PORT === "465",
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-      });
-
-      transporter.verify((smtpErr, success) => {
-        if (smtpErr) {
-          console.error("SMTP Error:", smtpErr);
-          return res.status(500).json({ error: "SMTP connection failed" });
-        }
-
-        const mailOptions = {
-          from: `"Contact Form" <${process.env.EMAIL_USER}>`,
+      try {
+        // 1️⃣ Email to admin
+        await sendEmail({
           to: process.env.EMAIL_RECEIVER,
           subject: "New Contact Form Submission",
           html: `
@@ -77,18 +66,27 @@ router.post("/", upload.single("file"), async (req, res) => {
                 },
               ]
             : [],
-        };
-
-        transporter.sendMail(mailOptions, (emailErr, info) => {
-          if (emailErr) {
-            console.error("Email Error:", emailErr);
-            return res.status(500).json({ error: "Email sending failed" });
-          }
-          return res
-            .status(200)
-            .json({ message: "Form submitted successfully" });
         });
-      });
+
+        // 2️⃣ Confirmation email to user
+        await sendEmail({
+          to: email,
+          subject: "We Received Your Contact Request",
+          html: `
+            <h2>Hi ${fullName},</h2>
+            <p>Thank you for reaching out to <strong>Optimal IT Solutions</strong>.</p>
+            <p>Our team will get back to you shortly.</p>
+            <hr />
+            <br/>
+            <p>Visit our website: <a href="https://optimal-itsolutions.com">optimal-itsolutions.com</a></p>
+          `,
+        });
+
+        return res.status(200).json({ message: "Form submitted successfully" });
+      } catch (emailErr) {
+        console.error("Email Error:", emailErr);
+        return res.status(500).json({ error: "Email sending failed" });
+      }
     });
   });
 });
