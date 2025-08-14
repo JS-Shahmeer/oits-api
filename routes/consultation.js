@@ -41,40 +41,67 @@ router.post("/", upload.single("file"), (req, res) => {
         return res.status(500).json({ error: "Database insert failed" });
       }
 
-      // 📧 Send to Admin
-      await sendEmail({
-        to: process.env.EMAIL_RECEIVER,
-        subject: "New Consultation Request",
-        html: `
-          <h3>New Consultation Submission</h3>
-          <p><strong>Name:</strong> ${fullName}</p>
-          <p><strong>Email:</strong> ${email}</p>
-          <p><strong>Country:</strong> ${country}</p>
-          <p><strong>Number:</strong> ${number}</p>
-          <p><strong>Message:</strong> ${message}</p>
-        `,
-        attachments: file
-          ? [
-              {
-                filename: file.originalname,
-                content: file.buffer,
-              },
-            ]
-          : [],
-      });
+      try {
+        // 1️⃣ Email to Admin
+        const adminMailOptions = {
+          to: process.env.EMAIL_RECEIVER,
+          subject: "New Consultation Request",
+          html: `
+            <h3>New Consultation Submission</h3>
+            <p><strong>Name:</strong> ${fullName}</p>
+            <p><strong>Email:</strong> ${email}</p>
+            <p><strong>Country:</strong> ${country}</p>
+            <p><strong>Number:</strong> ${number}</p>
+            <p><strong>Message:</strong> ${message}</p>
+          `,
+          attachments: file
+            ? [
+                {
+                  filename: file.originalname,
+                  content: file.buffer,
+                },
+              ]
+            : [],
+        };
+        await sendEmail(adminMailOptions);
+        console.log(`✅ Admin email sent to ${process.env.EMAIL_RECEIVER}`);
 
-      // 📧 Confirmation to User
-      await sendEmail({
-        to: email,
-        subject: "Consultation Confirmation",
-        html: `
-          <h2>Hi ${fullName},</h2>
-          <p>Thank you for booking a consultation with <strong>Optimal IT Solutions</strong>.</p>
-          <p>We will get back to you shortly.</p>
-        `,
-      });
+        // ✅ Log admin email
+        const logAdminSql = `
+          INSERT INTO sent_email_logs (recipient_email, subject, body)
+          VALUES (?, ?, ?)
+        `;
+        db.query(logAdminSql, [adminMailOptions.to, adminMailOptions.subject, adminMailOptions.html], (logErr) => {
+          if (logErr) console.error("Error logging admin email:", logErr);
+        });
 
-      res.status(200).json({ message: "Consultation submitted successfully" });
+        // 2️⃣ Confirmation email to User
+        const userMailOptions = {
+          to: email,
+          subject: "Consultation Confirmation",
+          html: `
+            <h2>Hi ${fullName},</h2>
+            <p>Thank you for booking a consultation with <strong>Optimal IT Solutions</strong>.</p>
+            <p>We will get back to you shortly.</p>
+          `,
+        };
+        await sendEmail(userMailOptions);
+        console.log(`✅ Confirmation email sent to ${email}`);
+
+        // ✅ Log user email
+        const logUserSql = `
+          INSERT INTO sent_email_logs (recipient_email, subject, body)
+          VALUES (?, ?, ?)
+        `;
+        db.query(logUserSql, [userMailOptions.to, userMailOptions.subject, userMailOptions.html], (logErr) => {
+          if (logErr) console.error("Error logging user email:", logErr);
+        });
+
+        res.status(200).json({ message: "Consultation submitted successfully" });
+      } catch (emailErr) {
+        console.error("Email Error:", emailErr);
+        return res.status(500).json({ error: "Email sending failed" });
+      }
     });
   });
 });

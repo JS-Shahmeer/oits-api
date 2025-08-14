@@ -1,14 +1,15 @@
+// routes/socialPresence.js
 const express = require("express");
 const router = express.Router();
 const multer = require("multer");
-const nodemailer = require("nodemailer");
 const db = require("../db");
+const sendEmail = require("../utils/sendEmail");
 require("dotenv").config();
 
 const upload = multer({ storage: multer.memoryStorage() });
 
 // POST /api/socialPresence
-router.post("/", upload.single("file"), async (req, res) => {
+router.post("/", upload.single("file"), (req, res) => {
   const { fullName, email, number, country, message, privacy } = req.body;
   const file = req.file;
 
@@ -18,14 +19,14 @@ router.post("/", upload.single("file"), async (req, res) => {
 
   db.getConnection((connErr, connection) => {
     if (connErr) {
-      console.error("Connection Error:", connErr);
+      console.error("❌ Connection Error:", connErr);
       return res.status(500).json({ error: "Database connection error" });
     }
 
     const query = `
-    INSERT INTO social_presence_requests (full_name, email, number, country, message, file_name)
-    VALUES (?, ?, ?, ?, ?, ?)
-        `;
+      INSERT INTO social_presence_requests (full_name, email, number, country, message, file_name)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `;
     const values = [
       fullName,
       email,
@@ -34,32 +35,19 @@ router.post("/", upload.single("file"), async (req, res) => {
       message,
       file ? file.originalname : null,
     ];
-    connection.query(query, values, (err, result) => {
+
+    connection.query(query, values, async (err) => {
       connection.release();
 
       if (err) {
-        console.error("DB Error:", err);
+        console.error("❌ DB Error:", err);
         return res.status(500).json({ error: "Database insert failed" });
       }
 
-      const transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST,
-        port: parseInt(process.env.EMAIL_PORT),
-        secure: process.env.EMAIL_PORT === "465",
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-      });
-
-      transporter.verify((smtpErr, success) => {
-        if (smtpErr) {
-          console.error("SMTP Error:", smtpErr);
-          return res.status(500).json({ error: "SMTP connection failed" });
-        }
-
-        const mailOptions = {
-          from: `"Social Media Presence Form" <${process.env.EMAIL_USER}>`,
+      try {
+        // 1️⃣ Email to admin
+        const adminMail = {
+          from: `"Optimal IT Solutions" <${process.env.EMAIL_USER}>`,
           to: process.env.EMAIL_RECEIVER,
           subject: "New Social Media Presence Request",
           html: `
@@ -79,16 +67,44 @@ router.post("/", upload.single("file"), async (req, res) => {
               ]
             : [],
         };
+        await sendEmail(adminMail);
+        console.log(`✅ Admin notified about social presence request from ${fullName}`);
 
-        transporter.sendMail(mailOptions, (emailErr, info) => {
-          if (emailErr) {
-            console.error("Email Error:", emailErr);
-            return res.status(500).json({ error: "Email sending failed" });
-          }
-
-          return res.status(200).json({ message: "Submission successful" });
+        // Log admin email
+        const logSql = `
+          INSERT INTO sent_email_logs (recipient_email, subject, body)
+          VALUES (?, ?, ?)
+        `;
+        db.query(logSql, [adminMail.to, adminMail.subject, adminMail.html], (err) => {
+          if (err) console.error("Error logging sent email:", err);
         });
-      });
+
+        // 2️⃣ Confirmation email to user
+        const userMail = {
+          from: `"Optimal IT Solutions" <${process.env.EMAIL_USER}>`,
+          to: email,
+          subject: "We Received Your Social Media Presence Request",
+          html: `
+            <h2>Hi ${fullName},</h2>
+            <p>Thank you for submitting your Social Media Presence form to <strong>Optimal IT Solutions</strong>.</p>
+            <p>Our team will review your request and get back to you shortly.</p>
+            <hr />
+            <p>Visit our website: <a href="https://optimal-itsolutions.com">optimal-itsolutions.com</a></p>
+          `,
+        };
+        await sendEmail(userMail);
+        console.log(`✅ Confirmation email sent to ${email}`);
+
+        // Log user email
+        db.query(logSql, [userMail.to, userMail.subject, userMail.html], (err) => {
+          if (err) console.error("Error logging sent email:", err);
+        });
+
+        return res.status(200).json({ message: "Submission successful" });
+      } catch (emailErr) {
+        console.error("❌ Email Error:", emailErr);
+        return res.status(500).json({ error: "Email sending failed" });
+      }
     });
   });
 });

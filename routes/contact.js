@@ -2,13 +2,13 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const db = require("../db");
-const sendEmail = require("../utils/sendEmail"); // ✅ reusable email function
+const sendEmail = require("../utils/sendEmail");
 require("dotenv").config();
 
 const upload = multer({ storage: multer.memoryStorage() });
 
 // POST /api/contact
-router.post("/", upload.single("file"), async (req, res) => {
+router.post("/", upload.single("file"), (req, res) => {
   const { fullName, email, phone, services, comments, country } = req.body;
   const file = req.file;
 
@@ -36,7 +36,7 @@ router.post("/", upload.single("file"), async (req, res) => {
       file ? file.originalname : null,
     ];
 
-    connection.query(query, values, async (err, result) => {
+    connection.query(query, values, async (err) => {
       connection.release();
 
       if (err) {
@@ -46,7 +46,8 @@ router.post("/", upload.single("file"), async (req, res) => {
 
       try {
         // 1️⃣ Email to admin
-        await sendEmail({
+        const adminMailOptions = {
+          from: `"Optimal IT Solutions" <${process.env.EMAIL_USER}>`,
           to: process.env.EMAIL_RECEIVER,
           subject: "New Contact Form Submission",
           html: `
@@ -66,10 +67,26 @@ router.post("/", upload.single("file"), async (req, res) => {
                 },
               ]
             : [],
-        });
+        };
+        await sendEmail(adminMailOptions);
+        console.log(`✅ Admin email sent to ${process.env.EMAIL_RECEIVER}`);
+
+        // ✅ Log admin email
+        const logAdminSql = `
+          INSERT INTO sent_email_logs (recipient_email, subject, body)
+          VALUES (?, ?, ?)
+        `;
+        db.query(
+          logAdminSql,
+          [adminMailOptions.to, adminMailOptions.subject, adminMailOptions.html],
+          (logErr) => {
+            if (logErr) console.error("Error logging admin email:", logErr);
+          }
+        );
 
         // 2️⃣ Confirmation email to user
-        await sendEmail({
+        const userMailOptions = {
+          from: `"Optimal IT Solutions" <${process.env.EMAIL_USER}>`,
           to: email,
           subject: "We Received Your Contact Request",
           html: `
@@ -77,14 +94,28 @@ router.post("/", upload.single("file"), async (req, res) => {
             <p>Thank you for reaching out to <strong>Optimal IT Solutions</strong>.</p>
             <p>Our team will get back to you shortly.</p>
             <hr />
-            <br/>
             <p>Visit our website: <a href="https://optimal-itsolutions.com">optimal-itsolutions.com</a></p>
           `,
-        });
+        };
+        await sendEmail(userMailOptions);
+        console.log(`✅ Confirmation email sent to ${email}`);
+
+        // ✅ Log user email
+        const logUserSql = `
+          INSERT INTO sent_email_logs (recipient_email, subject, body)
+          VALUES (?, ?, ?)
+        `;
+        db.query(
+          logUserSql,
+          [userMailOptions.to, userMailOptions.subject, userMailOptions.html],
+          (logErr) => {
+            if (logErr) console.error("Error logging user email:", logErr);
+          }
+        );
 
         return res.status(200).json({ message: "Form submitted successfully" });
       } catch (emailErr) {
-        console.error("Email Error:", emailErr);
+        console.error("❌ Email Error:", emailErr);
         return res.status(500).json({ error: "Email sending failed" });
       }
     });

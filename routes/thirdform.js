@@ -1,10 +1,11 @@
+// routes/thirdform.js
 const express = require("express");
 const router = express.Router();
 const db = require("../db");
-const nodemailer = require("nodemailer");
+const sendEmail = require("../utils/sendEmail");
 require("dotenv").config();
 
-router.post("/", async (req, res) => {
+router.post("/", (req, res) => {
   try {
     const { fullName, email, phone, country, message, privacy, services } = req.body;
 
@@ -12,7 +13,6 @@ router.post("/", async (req, res) => {
     if (!fullName || !email || !phone || !country || !message || !privacy) {
       return res.status(400).json({ error: "All fields are required." });
     }
-
     if (!Array.isArray(services) || services.length === 0) {
       return res.status(400).json({ error: "Please select at least one service." });
     }
@@ -27,31 +27,16 @@ router.post("/", async (req, res) => {
     `;
     const values = [fullName, email, phone, country, message, servicesStr, privacy];
 
-    db.query(sql, values, (err, result) => {
+    db.query(sql, values, async (err) => {
       if (err) {
-        console.error("DB Insert Error:", err);
+        console.error("❌ DB Insert Error:", err);
         return res.status(500).json({ error: "Database error." });
       }
 
-      // Send Email
-      const transporter = nodemailer.createTransport({
-        host: process.env.EMAIL_HOST,
-        port: parseInt(process.env.EMAIL_PORT),
-        secure: process.env.EMAIL_PORT === "465",
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-      });
-
-      transporter.verify((smtpErr, success) => {
-        if (smtpErr) {
-          console.error("SMTP Error:", smtpErr);
-          return res.status(500).json({ error: "SMTP connection failed" });
-        }
-
-        const mailOptions = {
-          from: `"Service Inquiry Form" <${process.env.EMAIL_USER}>`,
+      try {
+        // 1️⃣ Email to admin
+        const adminMail = {
+          from: `"Optimal IT Solutions" <${process.env.EMAIL_USER}>`,
           to: process.env.EMAIL_RECEIVER,
           subject: "New Service Inquiry",
           html: `
@@ -64,19 +49,49 @@ router.post("/", async (req, res) => {
             <p><strong>Message:</strong> ${message}</p>
           `,
         };
+        await sendEmail(adminMail);
+        console.log(`✅ Admin notified about service inquiry from ${fullName}`);
 
-        transporter.sendMail(mailOptions, (emailErr, info) => {
-          if (emailErr) {
-            console.error("Email Error:", emailErr);
-            return res.status(500).json({ error: "Email sending failed" });
-          }
-
-          return res.status(200).json({ success: true, message: "Submission saved and email sent." });
+        // Log admin email
+        const logSql = `
+          INSERT INTO sent_email_logs (recipient_email, subject, body)
+          VALUES (?, ?, ?)
+        `;
+        db.query(logSql, [adminMail.to, adminMail.subject, adminMail.html], (err) => {
+          if (err) console.error("Error logging sent email:", err);
         });
-      });
+
+        // 2️⃣ Confirmation email to user
+        const userMail = {
+          from: `"Optimal IT Solutions" <${process.env.EMAIL_USER}>`,
+          to: email,
+          subject: "We Received Your Service Inquiry",
+          html: `
+            <h2>Hi ${fullName},</h2>
+            <p>Thank you for your interest in our services at <strong>Optimal IT Solutions</strong>.</p>
+            <p>We have received your request for the following services:</p>
+            <p><em>${servicesStr}</em></p>
+            <p>Our team will review your request and get back to you shortly.</p>
+            <hr />
+            <p>Visit our website: <a href="https://optimal-itsolutions.com">optimal-itsolutions.com</a></p>
+          `,
+        };
+        await sendEmail(userMail);
+        console.log(`✅ Confirmation email sent to ${email}`);
+
+        // Log user confirmation email
+        db.query(logSql, [userMail.to, userMail.subject, userMail.html], (err) => {
+          if (err) console.error("Error logging sent email:", err);
+        });
+
+        return res.status(200).json({ success: true, message: "Submission saved and emails sent." });
+      } catch (emailErr) {
+        console.error("❌ Email Error:", emailErr);
+        return res.status(500).json({ error: "Email sending failed" });
+      }
     });
   } catch (err) {
-    console.error("Server Error:", err);
+    console.error("❌ Server Error:", err);
     return res.status(500).json({ error: "Server error." });
   }
 });
