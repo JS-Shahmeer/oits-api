@@ -6,6 +6,7 @@ const thirdformRoute = require("./routes/thirdform");
 const socialChecklistRoute = require("./routes/socialChecklist");
 const socialPresenceRoute = require("./routes/socialPresence");
 const newsletterRoute = require("./routes/newsletter");
+const ppcHeroFormRoute = require("./routes/ppcHeroForm");
 const cron = require("node-cron");
 const runReportEmails = require("./jobs/reportEmails"); // <-- Our new job
 
@@ -23,6 +24,7 @@ app.use("/api/thirdform", thirdformRoute);
 app.use("/api/socialChecklist", socialChecklistRoute);
 app.use("/api/socialPresence", socialPresenceRoute);
 app.use("/api/newsletter", newsletterRoute);
+app.use("/api/ppcHeroForm", ppcHeroFormRoute);
 
 // Schedule job: Every 12 hours at minute 0
 cron.schedule("0 */12 * * *", () => {
