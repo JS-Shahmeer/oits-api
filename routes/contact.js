@@ -94,11 +94,13 @@ router.post("/", upload.single("file"), (req, res) => {
           to: email,
           subject: "Thanks for signing up!",
           html: `
-            <h3> Hi <strong>${fullName}</strong></h3>
-            <p>Thanks for reaching out to Optimal IT Solutions! We’re excited to bring your ${services} vision to life. One of our team members will connect with you within 24 hours to discuss your goals and next steps.</p>
+          <div style="font-family: Helvetica, Arial, sans-serif; font-size: 16px; color: #333;">
+            <p> Hi ${fullName}</p>
+            <p>Thanks for reaching out to <strong>Optimal IT Solutions!</strong> We’re excited to bring your ${services} vision to life. One of our team members will connect with you within 24 hours to discuss your goals and next steps.</p>
             <p>In the meantime, you can visit us at <a href="https://optimal-itsolutions.com"> www.optimal-itsolutions.com </a> or call us at <a href="tel:8887106350"> +1 888-710-6350 </a> anytime.</p>
             <p>Best,</p>
             <p><strong>Team Optimal IT Solutions</strong></p>
+          </div>  
             `,
         };
         await sendEmail(userMailOptions);

@@ -7,14 +7,17 @@ require("dotenv").config();
 
 router.post("/", (req, res) => {
   try {
-    const { fullName, email, phone, country, message, privacy, services } = req.body;
+    const { fullName, email, phone, country, message, privacy, services } =
+      req.body;
 
     // Validation
     if (!fullName || !email || !phone || !country || !message || !privacy) {
       return res.status(400).json({ error: "All fields are required." });
     }
     if (!Array.isArray(services) || services.length === 0) {
-      return res.status(400).json({ error: "Please select at least one service." });
+      return res
+        .status(400)
+        .json({ error: "Please select at least one service." });
     }
 
     const servicesStr = services.join(", ");
@@ -25,7 +28,15 @@ router.post("/", (req, res) => {
       (full_name, email, phone, country, message, services, privacy) 
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
-    const values = [fullName, email, phone, country, message, servicesStr, privacy];
+    const values = [
+      fullName,
+      email,
+      phone,
+      country,
+      message,
+      servicesStr,
+      privacy,
+    ];
 
     db.query(sql, values, async (err) => {
       if (err) {
@@ -57,9 +68,13 @@ router.post("/", (req, res) => {
           INSERT INTO sent_email_logs (recipient_email, subject, body)
           VALUES (?, ?, ?)
         `;
-        db.query(logSql, [adminMail.to, adminMail.subject, adminMail.html], (err) => {
-          if (err) console.error("Error logging sent email:", err);
-        });
+        db.query(
+          logSql,
+          [adminMail.to, adminMail.subject, adminMail.html],
+          (err) => {
+            if (err) console.error("Error logging sent email:", err);
+          }
+        );
 
         // 2️⃣ Confirmation email to user
         const userMail = {
@@ -67,22 +82,33 @@ router.post("/", (req, res) => {
           to: email,
           subject: "Thanks for signing up!",
           html: `
-            <h3> Hi <strong>${fullName}</strong></h3>
-            <p>Thanks for reaching out to Optimal IT Solutions! We’re excited to bring your ${servicesStr} vision to life. One of our team members will connect with you within 24 hours to discuss your goals and next steps.</p>
+          <div style="font-family: Helvetica, Arial, sans-serif; font-size: 16px; color: #333;">
+            <p> Hi ${fullName}</p>
+            <p>Thanks for reaching out to <strong>Optimal IT Solutions!</strong> We’re excited to bring your ${servicesStr} vision to life. One of our team members will connect with you within 24 hours to discuss your goals and next steps.</p>
             <p>In the meantime, you can visit us at <a href="https://optimal-itsolutions.com"> www.optimal-itsolutions.com </a> or call us at <a href="tel:8887106350"> +1 888-710-6350 </a> anytime.</p>
             <p>Best,</p>
             <p><strong>Team Optimal IT Solutions</strong></p>
+          </div>  
             `,
         };
         await sendEmail(userMail);
         console.log(`✅ Confirmation email sent to ${email}`);
 
         // Log user confirmation email
-        db.query(logSql, [userMail.to, userMail.subject, userMail.html], (err) => {
-          if (err) console.error("Error logging sent email:", err);
-        });
+        db.query(
+          logSql,
+          [userMail.to, userMail.subject, userMail.html],
+          (err) => {
+            if (err) console.error("Error logging sent email:", err);
+          }
+        );
 
-        return res.status(200).json({ success: true, message: "Submission saved and emails sent." });
+        return res
+          .status(200)
+          .json({
+            success: true,
+            message: "Submission saved and emails sent.",
+          });
       } catch (emailErr) {
         console.error("❌ Email Error:", emailErr);
         return res.status(500).json({ error: "Email sending failed" });
