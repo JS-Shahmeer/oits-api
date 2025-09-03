@@ -71,19 +71,29 @@ router.post("/", upload.single("file"), (req, res) => {
           INSERT INTO sent_email_logs (recipient_email, subject, body)
           VALUES (?, ?, ?)
         `;
-        db.query(logAdminSql, [adminMailOptions.to, adminMailOptions.subject, adminMailOptions.html], (logErr) => {
-          if (logErr) console.error("Error logging admin email:", logErr);
-        });
+        db.query(
+          logAdminSql,
+          [
+            adminMailOptions.to,
+            adminMailOptions.subject,
+            adminMailOptions.html,
+          ],
+          (logErr) => {
+            if (logErr) console.error("Error logging admin email:", logErr);
+          }
+        );
 
         // 2️⃣ Confirmation email to User
         const userMailOptions = {
           to: email,
-          subject: "Consultation Confirmation",
+          subject: "Thanks for signing up!",
           html: `
-            <h2>Hi ${fullName},</h2>
-            <p>Thank you for booking a consultation with <strong>Optimal IT Solutions</strong>.</p>
-            <p>We will get back to you shortly.</p>
-          `,
+            <h3> Hi <strong>${fullName}</strong></h3>
+            <p>Thanks for reaching out to Optimal IT Solutions! We’re excited to bring your  vision to life. One of our team members will connect with you within 24 hours to discuss your goals and next steps.</p>
+            <p>In the meantime, you can visit us at <a href="https://optimal-itsolutions.com"> www.optimal-itsolutions.com </a> or call us at <a tel="8887106350"> +1 888-710-6350 </a> anytime.</p>
+            <p>Best,</p>
+            <p><strong>Team Optimal IT Solutions</strong></p>
+            `,
         };
         await sendEmail(userMailOptions);
         console.log(`✅ Confirmation email sent to ${email}`);
@@ -93,11 +103,17 @@ router.post("/", upload.single("file"), (req, res) => {
           INSERT INTO sent_email_logs (recipient_email, subject, body)
           VALUES (?, ?, ?)
         `;
-        db.query(logUserSql, [userMailOptions.to, userMailOptions.subject, userMailOptions.html], (logErr) => {
-          if (logErr) console.error("Error logging user email:", logErr);
-        });
+        db.query(
+          logUserSql,
+          [userMailOptions.to, userMailOptions.subject, userMailOptions.html],
+          (logErr) => {
+            if (logErr) console.error("Error logging user email:", logErr);
+          }
+        );
 
-        res.status(200).json({ message: "Consultation submitted successfully" });
+        res
+          .status(200)
+          .json({ message: "Consultation submitted successfully" });
       } catch (emailErr) {
         console.error("Email Error:", emailErr);
         return res.status(500).json({ error: "Email sending failed" });

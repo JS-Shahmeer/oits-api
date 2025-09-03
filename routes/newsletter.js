@@ -48,15 +48,14 @@ router.post("/", (req, res) => {
       const userMailOptions = {
         from: `"Optimal IT Solutions" <${process.env.EMAIL_USER}>`,
         to: email,
-        subject: "Newsletter Subscription Confirmed",
-        html: `
-          <h2>Welcome to Optimal IT Solutions Newsletter!</h2>
-          <p>Hi there,</p>
-          <p>Thank you for subscribing to our newsletter. You’ll now receive the latest updates, tips, and news directly to your inbox.</p>
-          <p>Visit us anytime: <a href="https://optimal-itsolutions.com">optimal-itsolutions.com</a></p>
-          <hr />
-          <p>- The Optimal IT Solutions Team</p>
-        `,
+        subject: "Thanks for signing up!",
+          html: `
+            <h3> Hi </h3>
+            <p>Thanks for reaching out to Optimal IT Solutions! We’re excited to bring your  vision to life. One of our team members will connect with you within 24 hours to discuss your goals and next steps.</p>
+            <p>In the meantime, you can visit us at <a href="https://optimal-itsolutions.com"> www.optimal-itsolutions.com </a> or call us at <a tel="8887106350"> +1 888-710-6350 </a> anytime.</p>
+            <p>Best,</p>
+            <p><strong>Team Optimal IT Solutions</strong></p>
+            `,
       };
       await sendEmail(userMailOptions);
       console.log(`✅ Confirmation email sent to subscriber: ${email}`);

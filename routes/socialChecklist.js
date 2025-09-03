@@ -33,43 +33,57 @@ router.post("/", (req, res) => {
         `,
       };
       await sendEmail(adminMailOptions);
-      console.log(`✅ Admin notified about new social checklist request: ${email}`);
+      console.log(
+        `✅ Admin notified about new social checklist request: ${email}`
+      );
 
       // ✅ Log admin email
       const logAdminSql = `
         INSERT INTO sent_email_logs (recipient_email, subject, body)
         VALUES (?, ?, ?)
       `;
-      db.query(logAdminSql, [adminMailOptions.to, adminMailOptions.subject, adminMailOptions.html], (logErr) => {
-        if (logErr) console.error("Error logging admin email:", logErr);
-      });
+      db.query(
+        logAdminSql,
+        [adminMailOptions.to, adminMailOptions.subject, adminMailOptions.html],
+        (logErr) => {
+          if (logErr) console.error("Error logging admin email:", logErr);
+        }
+      );
 
       // 2️⃣ Confirmation email to user
       const userMailOptions = {
         from: `"Optimal IT Solutions" <${process.env.EMAIL_USER}>`,
         to: email,
-        subject: "Your Social Media Checklist Request",
+        subject: "Thanks for signing up!",
         html: `
-          <h2>Hi there,</h2>
-          <p>Thank you for requesting our Social Media Checklist from <strong>Optimal IT Solutions</strong>.</p>
-          <p>You will receive your checklist and further guidance shortly.</p>
-          <hr />
-          <p>Visit our website: <a href="https://optimal-itsolutions.com">optimal-itsolutions.com</a></p>
-        `,
+            <h3> Hi </h3>
+            <p>Thanks for reaching out to Optimal IT Solutions! We’re excited to bring your  vision to life. One of our team members will connect with you within 24 hours to discuss your goals and next steps.</p>
+            <p>In the meantime, you can visit us at <a href="https://optimal-itsolutions.com"> www.optimal-itsolutions.com </a> or call us at <a tel="8887106350"> +1 888-710-6350 </a> anytime.</p>
+            <p>Best,</p>
+            <p><strong>Team Optimal IT Solutions</strong></p>
+            `,
       };
       await sendEmail(userMailOptions);
-      console.log(`✅ Confirmation email sent to checklist requester: ${email}`);
+      console.log(
+        `✅ Confirmation email sent to checklist requester: ${email}`
+      );
 
       // ✅ Log user email
       const logUserSql = `
         INSERT INTO sent_email_logs (recipient_email, subject, body)
         VALUES (?, ?, ?)
       `;
-      db.query(logUserSql, [userMailOptions.to, userMailOptions.subject, userMailOptions.html], (logErr) => {
-        if (logErr) console.error("Error logging user email:", logErr);
-      });
+      db.query(
+        logUserSql,
+        [userMailOptions.to, userMailOptions.subject, userMailOptions.html],
+        (logErr) => {
+          if (logErr) console.error("Error logging user email:", logErr);
+        }
+      );
 
-      return res.status(200).json({ success: true, message: "Checklist request submitted." });
+      return res
+        .status(200)
+        .json({ success: true, message: "Checklist request submitted." });
     } catch (emailErr) {
       console.error("❌ Email Error:", emailErr);
       return res.status(500).json({ error: "Email sending failed" });

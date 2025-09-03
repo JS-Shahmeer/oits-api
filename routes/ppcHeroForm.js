@@ -68,37 +68,47 @@ router.post("/", upload.single("file"), (req, res) => {
             : [],
         };
         await sendEmail(adminMail);
-        console.log(`✅ Admin notified about PPC Hero request from ${fullName}`);
+        console.log(
+          `✅ Admin notified about PPC Hero request from ${fullName}`
+        );
 
         // Log admin email
         const logSql = `
           INSERT INTO sent_email_logs (recipient_email, subject, body)
           VALUES (?, ?, ?)
         `;
-        db.query(logSql, [adminMail.to, adminMail.subject, adminMail.html], (err) => {
-          if (err) console.error("Error logging sent email:", err);
-        });
+        db.query(
+          logSql,
+          [adminMail.to, adminMail.subject, adminMail.html],
+          (err) => {
+            if (err) console.error("Error logging sent email:", err);
+          }
+        );
 
         // 2️⃣ Confirmation email to user
         const userMail = {
           from: `"Optimal IT Solutions" <${process.env.EMAIL_USER}>`,
           to: email,
-          subject: "We Received Your PPC Hero Form Request",
+          subject: "Thanks for signing up!",
           html: `
-            <h2>Hi ${fullName},</h2>
-            <p>Thank you for submitting your PPC Hero form to <strong>Optimal IT Solutions</strong>.</p>
-            <p>Our PPC team will review your request and get back to you shortly.</p>
-            <hr />
-            <p>Visit our website: <a href="https://optimal-itsolutions.com">optimal-itsolutions.com</a></p>
-          `,
+            <h3> Hi <strong>${fullName}</strong></h3>
+            <p>Thanks for reaching out to Optimal IT Solutions! We’re excited to bring your  vision to life. One of our team members will connect with you within 24 hours to discuss your goals and next steps.</p>
+            <p>In the meantime, you can visit us at <a href="https://optimal-itsolutions.com"> www.optimal-itsolutions.com </a> or call us at <a tel="8887106350"> +1 888-710-6350 </a> anytime.</p>
+            <p>Best,</p>
+            <p><strong>Team Optimal IT Solutions</strong></p>
+            `,
         };
         await sendEmail(userMail);
         console.log(`✅ Confirmation email sent to ${email}`);
 
         // Log user email
-        db.query(logSql, [userMail.to, userMail.subject, userMail.html], (err) => {
-          if (err) console.error("Error logging sent email:", err);
-        });
+        db.query(
+          logSql,
+          [userMail.to, userMail.subject, userMail.html],
+          (err) => {
+            if (err) console.error("Error logging sent email:", err);
+          }
+        );
 
         return res.status(200).json({ message: "Submission successful" });
       } catch (emailErr) {

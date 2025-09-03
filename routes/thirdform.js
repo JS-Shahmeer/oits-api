@@ -65,16 +65,14 @@ router.post("/", (req, res) => {
         const userMail = {
           from: `"Optimal IT Solutions" <${process.env.EMAIL_USER}>`,
           to: email,
-          subject: "We Received Your Service Inquiry",
+          subject: "Thanks for signing up!",
           html: `
-            <h2>Hi ${fullName},</h2>
-            <p>Thank you for your interest in our services at <strong>Optimal IT Solutions</strong>.</p>
-            <p>We have received your request for the following services:</p>
-            <p><em>${servicesStr}</em></p>
-            <p>Our team will review your request and get back to you shortly.</p>
-            <hr />
-            <p>Visit our website: <a href="https://optimal-itsolutions.com">optimal-itsolutions.com</a></p>
-          `,
+            <h3> Hi <strong>${fullName}</strong></h3>
+            <p>Thanks for reaching out to Optimal IT Solutions! We’re excited to bring your ${servicesStr} vision to life. One of our team members will connect with you within 24 hours to discuss your goals and next steps.</p>
+            <p>In the meantime, you can visit us at <a href="https://optimal-itsolutions.com"> www.optimal-itsolutions.com </a> or call us at <a tel="8887106350"> +1 888-710-6350 </a> anytime.</p>
+            <p>Best,</p>
+            <p><strong>Team Optimal IT Solutions</strong></p>
+            `,
         };
         await sendEmail(userMail);
         console.log(`✅ Confirmation email sent to ${email}`);
