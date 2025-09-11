@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const multer = require("multer");
 const db = require("../db");
-const sendEmail = require("../utils/sendEmail");
+const sendEmail = require("../utils/sendEmailGraph");
 
 const upload = multer({ storage: multer.memoryStorage() });
 

@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { format } = require('@fast-csv/format');
 const db = require('../db');
-const sendEmail = require('../utils/sendEmail');
+const sendEmail = require('../utils/sendEmailGraph');
 
 async function runReportEmails() {
     try {
