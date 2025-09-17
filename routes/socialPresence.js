@@ -49,7 +49,7 @@ router.post("/", upload.single("file"), (req, res) => {
         const adminMail = {
           from: `"Optimal IT Solutions" <${process.env.EMAIL_USER}>`,
           to: process.env.EMAIL_RECEIVER,
-          subject: "New Social Media Presence Request",
+          subject: "New Form Submittion Request",
           html: `
             <h3>New Submission Received</h3>
             <p><strong>Name:</strong> ${fullName}</p>
