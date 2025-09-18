@@ -11,6 +11,7 @@ const cron = require("node-cron");
 const runReportEmails = require("./jobs/reportEmails"); 
 const activityRoutes = require("./routes/activity"); // 👈 FIXED: switched to require
 const cookieParser = require("cookie-parser");
+const mobileppcHeroForm = require("./routes/mobileppcheroform");
 
 require("dotenv").config();
 
@@ -29,6 +30,7 @@ app.use("/api/socialPresence", socialPresenceRoute);
 app.use("/api/newsletter", newsletterRoute);
 app.use("/api/ppcHeroForm", ppcHeroFormRoute);
 app.use("/api/activity", activityRoutes); // 👈 activity logger route
+app.use("/api/mobileppcheroform", mobileppcHeroForm);
 
 // Schedule job: Every 12 hours at minute 0
 cron.schedule("0 */12 * * *", () => {
