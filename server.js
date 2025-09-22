@@ -21,10 +21,9 @@ const app = express();
 
 // ✅ Global CORS
 const allowedOrigins = [
-  "https://www.optimal-itsolutions.com",
+  // "https://www.optimal-itsolutions.com",
   "https://www.optimal-itsolutions.com/lp/app-development-agency",
-
-  "http://localhost:5173",
+  // "http://localhost:5173",
 ];
 
 app.use(cors({
