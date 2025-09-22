@@ -7,7 +7,6 @@ require("dotenv").config();
 
 // POST /api/mobileppcheroform
 router.post("/", (req, res) => {
-  
   console.log("📩 New request received at /api/mobileppcheroform");
   const { name, email, phone, message } = req.body;
   console.log("➡️ Form data received:", { name, email, phone, message });
