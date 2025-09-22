@@ -6,16 +6,6 @@ const sendEmail = require("../utils/sendEmailGraph");
 require("dotenv").config();
 
 router.post("/", (req, res) => {
-  // ✅ Add CORS headers at the very top
-  res.setHeader("Access-Control-Allow-Origin", "https://www.optimal-itsolutions.com");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-
-  // ✅ Handle preflight request
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
-
   const { email } = req.body;
 
   // Basic validation
@@ -50,28 +40,24 @@ router.post("/", (req, res) => {
         INSERT INTO sent_email_logs (recipient_email, subject, body)
         VALUES (?, ?, ?)
       `;
-      db.query(
-        logAdminSql,
-        [adminMailOptions.to, adminMailOptions.subject, adminMailOptions.html],
-        (logErr) => {
-          if (logErr) console.error("Error logging admin email:", logErr);
-        }
-      );
+      db.query(logAdminSql, [adminMailOptions.to, adminMailOptions.subject, adminMailOptions.html], (logErr) => {
+        if (logErr) console.error("Error logging admin email:", logErr);
+      });
 
       // 2️⃣ Confirmation email to user
       const userMailOptions = {
         from: `"Optimal IT Solutions" <${process.env.EMAIL_USER}>`,
         to: email,
         subject: "Thanks for signing up!",
-        html: `
+          html: `
           <div style="font-family: Helvetica, Arial, sans-serif; font-size: 16px; color: #333;">
             <p> Hi </p>
-            <p>Thanks for reaching out to <strong>Optimal IT Solutions!</strong> We’re excited to bring your vision to life. One of our team members will connect with you within 24 hours to discuss your goals and next steps.</p>
+            <p>Thanks for reaching out to <strong>Optimal IT Solutions!</strong> We’re excited to bring your  vision to life. One of our team members will connect with you within 24 hours to discuss your goals and next steps.</p>
             <p>In the meantime, you can visit us at <a href="https://optimal-itsolutions.com"> www.optimal-itsolutions.com </a> or call us at <a href="tel:8887106350"> +1 888-710-6350 </a> anytime.</p>
             <p>Best,</p>
             <p><strong>Team Optimal IT Solutions</strong></p>
           </div>  
-        `,
+            `,
       };
       await sendEmail(userMailOptions);
       console.log(`✅ Confirmation email sent to subscriber: ${email}`);
@@ -81,13 +67,9 @@ router.post("/", (req, res) => {
         INSERT INTO sent_email_logs (recipient_email, subject, body)
         VALUES (?, ?, ?)
       `;
-      db.query(
-        logUserSql,
-        [userMailOptions.to, userMailOptions.subject, userMailOptions.html],
-        (logErr) => {
-          if (logErr) console.error("Error logging user email:", logErr);
-        }
-      );
+      db.query(logUserSql, [userMailOptions.to, userMailOptions.subject, userMailOptions.html], (logErr) => {
+        if (logErr) console.error("Error logging user email:", logErr);
+      });
 
       return res.status(200).json({ success: true, message: "Subscription successful." });
     } catch (emailErr) {

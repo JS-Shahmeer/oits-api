@@ -10,16 +10,6 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 // POST /api/socialPresence
 router.post("/", upload.single("file"), (req, res) => {
-  // ✅ Add CORS headers
-  res.setHeader("Access-Control-Allow-Origin", "https://www.optimal-itsolutions.com");
-  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
-  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
-
-  // ✅ Handle preflight request
-  if (req.method === "OPTIONS") {
-    return res.status(200).end();
-  }
-
   const { fullName, email, number, country, message, privacy } = req.body;
   const file = req.file;
 
@@ -103,12 +93,12 @@ router.post("/", upload.single("file"), (req, res) => {
           html: `
           <div style="font-family: Helvetica, Arial, sans-serif; font-size: 16px; color: #333;">
             <p> Hi ${fullName}</p>
-            <p>Thanks for reaching out to <strong>Optimal IT Solutions!</strong> We’re excited to bring your vision to life. One of our team members will connect with you within 24 hours to discuss your goals and next steps.</p>
+            <p>Thanks for reaching out to <strong>Optimal IT Solutions!</strong> We’re excited to bring your  vision to life. One of our team members will connect with you within 24 hours to discuss your goals and next steps.</p>
             <p>In the meantime, you can visit us at <a href="https://optimal-itsolutions.com"> www.optimal-itsolutions.com </a> or call us at <a href="tel:8887106350"> +1 888-710-6350 </a> anytime.</p>
             <p>Best,</p>
             <p><strong>Team Optimal IT Solutions</strong></p>
           </div>  
-          `,
+            `,
         };
         await sendEmail(userMail);
         console.log(`✅ Confirmation email sent to ${email}`);
