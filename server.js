@@ -22,8 +22,8 @@ const app = express();
 // ✅ Global CORS
 const allowedOrigins = [
   "https://www.optimal-itsolutions.com",
+  "*",
   "http://localhost:5173",
-  "https://oits-api.vercel.app/api/mobileppcheroform",
 ];
 
 app.use(cors({
@@ -37,7 +37,7 @@ app.use(cors({
     }
   },
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
+  allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
 app.use(express.json());
