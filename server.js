@@ -22,7 +22,7 @@ const app = express();
 // ✅ Global CORS
 const allowedOrigins = [
   "https://www.optimal-itsolutions.com",
-  "*",
+
   "http://localhost:5173",
 ];
 
