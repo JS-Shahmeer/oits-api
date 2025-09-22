@@ -5,19 +5,27 @@ const db = require("../db");
 const sendEmail = require("../utils/sendEmailGraph");
 require("dotenv").config();
 
+// POST /api/thirdform
 router.post("/", (req, res) => {
+  // ✅ Add CORS headers
+  res.setHeader("Access-Control-Allow-Origin", "https://www.optimal-itsolutions.com");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  // ✅ Handle preflight request
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
   try {
-    const { fullName, email, phone, country, message, privacy, services } =
-      req.body;
+    const { fullName, email, phone, country, message, privacy, services } = req.body;
 
     // Validation
     if (!fullName || !email || !phone || !country || !message || !privacy) {
       return res.status(400).json({ error: "All fields are required." });
     }
     if (!Array.isArray(services) || services.length === 0) {
-      return res
-        .status(400)
-        .json({ error: "Please select at least one service." });
+      return res.status(400).json({ error: "Please select at least one service." });
     }
 
     const servicesStr = services.join(", ");
@@ -28,15 +36,7 @@ router.post("/", (req, res) => {
       (full_name, email, phone, country, message, services, privacy) 
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
-    const values = [
-      fullName,
-      email,
-      phone,
-      country,
-      message,
-      servicesStr,
-      privacy,
-    ];
+    const values = [fullName, email, phone, country, message, servicesStr, privacy];
 
     db.query(sql, values, async (err) => {
       if (err) {
@@ -68,13 +68,9 @@ router.post("/", (req, res) => {
           INSERT INTO sent_email_logs (recipient_email, subject, body)
           VALUES (?, ?, ?)
         `;
-        db.query(
-          logSql,
-          [adminMail.to, adminMail.subject, adminMail.html],
-          (err) => {
-            if (err) console.error("Error logging sent email:", err);
-          }
-        );
+        db.query(logSql, [adminMail.to, adminMail.subject, adminMail.html], (err) => {
+          if (err) console.error("Error logging sent email:", err);
+        });
 
         // 2️⃣ Confirmation email to user
         const userMail = {
@@ -95,20 +91,11 @@ router.post("/", (req, res) => {
         console.log(`✅ Confirmation email sent to ${email}`);
 
         // Log user confirmation email
-        db.query(
-          logSql,
-          [userMail.to, userMail.subject, userMail.html],
-          (err) => {
-            if (err) console.error("Error logging sent email:", err);
-          }
-        );
+        db.query(logSql, [userMail.to, userMail.subject, userMail.html], (err) => {
+          if (err) console.error("Error logging sent email:", err);
+        });
 
-        return res
-          .status(200)
-          .json({
-            success: true,
-            message: "Submission saved and emails sent.",
-          });
+        return res.status(200).json({ success: true, message: "Submission saved and emails sent." });
       } catch (emailErr) {
         console.error("❌ Email Error:", emailErr);
         return res.status(500).json({ error: "Email sending failed" });

@@ -10,6 +10,16 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 // POST /api/ppcHeroForm
 router.post("/", upload.single("file"), (req, res) => {
+  // ✅ Add CORS headers at the very top
+  res.setHeader("Access-Control-Allow-Origin", "https://www.optimal-itsolutions.com");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  // ✅ Handle preflight request
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
   const { fullName, email, number, country, message, privacy } = req.body;
   const file = req.file;
 
@@ -68,22 +78,16 @@ router.post("/", upload.single("file"), (req, res) => {
             : [],
         };
         await sendEmail(adminMail);
-        console.log(
-          `✅ Admin notified about PPC Hero request from ${fullName}`
-        );
+        console.log(`✅ Admin notified about PPC Hero request from ${fullName}`);
 
         // Log admin email
         const logSql = `
           INSERT INTO sent_email_logs (recipient_email, subject, body)
           VALUES (?, ?, ?)
         `;
-        db.query(
-          logSql,
-          [adminMail.to, adminMail.subject, adminMail.html],
-          (err) => {
-            if (err) console.error("Error logging sent email:", err);
-          }
-        );
+        db.query(logSql, [adminMail.to, adminMail.subject, adminMail.html], (err) => {
+          if (err) console.error("Error logging sent email:", err);
+        });
 
         // 2️⃣ Confirmation email to user
         const userMail = {
@@ -93,7 +97,7 @@ router.post("/", upload.single("file"), (req, res) => {
           html: `
           <div style="font-family: Helvetica, Arial, sans-serif; font-size: 16px; color: #333;">
             <p> Hi ${fullName}</p>
-            <p>Thanks for reaching out to <strong>Optimal IT Solutions!</strong> We’re excited to bring your  vision to life. One of our team members will connect with you within 24 hours to discuss your goals and next steps.</p>
+            <p>Thanks for reaching out to <strong>Optimal IT Solutions!</strong> We’re excited to bring your vision to life. One of our team members will connect with you within 24 hours to discuss your goals and next steps.</p>
             <p>In the meantime, you can visit us at <a href="https://optimal-itsolutions.com"> www.optimal-itsolutions.com </a> or call us at <a href="tel:8887106350"> +1 888-710-6350 </a> anytime.</p>
             <p>Best,</p>
             <p><strong>Team Optimal IT Solutions</strong></p>
@@ -104,13 +108,9 @@ router.post("/", upload.single("file"), (req, res) => {
         console.log(`✅ Confirmation email sent to ${email}`);
 
         // Log user email
-        db.query(
-          logSql,
-          [userMail.to, userMail.subject, userMail.html],
-          (err) => {
-            if (err) console.error("Error logging sent email:", err);
-          }
-        );
+        db.query(logSql, [userMail.to, userMail.subject, userMail.html], (err) => {
+          if (err) console.error("Error logging sent email:", err);
+        });
 
         return res.status(200).json({ message: "Submission successful" });
       } catch (emailErr) {

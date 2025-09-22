@@ -8,25 +8,23 @@ const socialPresenceRoute = require("./routes/socialPresence");
 const newsletterRoute = require("./routes/newsletter");
 const ppcHeroFormRoute = require("./routes/ppcHeroForm");
 const cron = require("node-cron");
-const runReportEmails = require("./jobs/reportEmails"); 
-const activityRoutes = require("./routes/activity");
+const runReportEmails = require("./jobs/reportEmails");
+const activityRoutes = require("./routes/activity"); // 👈 FIXED: switched to require
 const cookieParser = require("cookie-parser");
 const mobileppcHeroForm = require("./routes/mobileppcheroform");
 
 require("dotenv").config();
 
+// app.use(cors({
+//   origin: [
+//     "https://www.optimal-itsolutions.com",
+//     "http://localhost:5173"
+//   ],
+//   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+//   allowedHeaders: ["Content-Type", "Authorization"]
+// }));
 const app = express();
-
-// ✅ Global CORS configuration (only your frontend domain allowed)
-app.use(cors({
-  origin: [
-    "https://www.optimal-itsolutions.com", // production
-    "http://localhost:5173"                // local dev (Vite)
-  ],
-  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"]
-}));
-
+app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
 app.use("/uploads", express.static("uploads")); // serve uploaded files
@@ -39,7 +37,7 @@ app.use("/api/socialChecklist", socialChecklistRoute);
 app.use("/api/socialPresence", socialPresenceRoute);
 app.use("/api/newsletter", newsletterRoute);
 app.use("/api/ppcHeroForm", ppcHeroFormRoute);
-app.use("/api/activity", activityRoutes);
+app.use("/api/activity", activityRoutes); // 👈 activity logger route
 app.use("/api/mobileppcheroform", mobileppcHeroForm);
 
 // Schedule job: Every 12 hours at minute 0

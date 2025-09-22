@@ -9,6 +9,17 @@ const upload = multer({ storage: multer.memoryStorage() });
 
 // POST /api/contact
 router.post("/", upload.single("file"), (req, res) => {
+  // ✅ Add CORS headers at the very top
+  res.setHeader("Access-Control-Allow-Origin", "https://www.optimal-itsolutions.com");
+  res.setHeader("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+  // ✅ Handle preflight request
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
+  // Existing logic
   const { fullName, email, phone, services, comments, country } = req.body;
   const file = req.file;
 
