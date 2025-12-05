@@ -12,8 +12,11 @@ router.post("/", upload.single("file"), (req, res) => {
   const { fullName, email, phone, services, comments, country } = req.body;
   const file = req.file;
 
-  if (!fullName || !email || !phone || !services || !comments || !country) {
-    return res.status(400).json({ error: "Missing required fields" });
+  // ✔ Only require name, email, phone
+  if (!fullName || !email || !phone) {
+    return res
+      .status(400)
+      .json({ error: "Full name, email, and phone are required" });
   }
 
   db.getConnection((connErr, connection) => {
@@ -30,12 +33,12 @@ router.post("/", upload.single("file"), (req, res) => {
       fullName,
       email,
       phone,
-      country,
-      services,
-      comments,
+      country || null,
+      services || null,
+      comments || null,
       file ? file.originalname : null,
     ];
-
+    
     connection.query(query, values, async (err) => {
       connection.release();
 

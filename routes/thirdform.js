@@ -10,17 +10,18 @@ router.post("/", (req, res) => {
     const { fullName, email, phone, country, message, privacy, services } =
       req.body;
 
-    // Validation
-    if (!fullName || !email || !phone || !country || !message || !privacy) {
-      return res.status(400).json({ error: "All fields are required." });
-    }
-    if (!Array.isArray(services) || services.length === 0) {
+    // ✔ Only require fullName, email, phone
+    if (!fullName || !email || !phone) {
       return res
         .status(400)
-        .json({ error: "Please select at least one service." });
+        .json({ error: "Full name, email, and phone are required." });
     }
 
-    const servicesStr = services.join(", ");
+    // Optional fields
+    const countryVal = country || null;
+    const messageVal = message || null;
+    const privacyVal = privacy || null;
+    const servicesStr = Array.isArray(services) ? services.join(", ") : null;
 
     // Insert into DB
     const sql = `
@@ -32,10 +33,10 @@ router.post("/", (req, res) => {
       fullName,
       email,
       phone,
-      country,
-      message,
+      countryVal,
+      messageVal,
       servicesStr,
-      privacy,
+      privacyVal,
     ];
 
     db.query(sql, values, async (err) => {
@@ -103,12 +104,10 @@ router.post("/", (req, res) => {
           }
         );
 
-        return res
-          .status(200)
-          .json({
-            success: true,
-            message: "Submission saved and emails sent.",
-          });
+        return res.status(200).json({
+          success: true,
+          message: "Submission saved and emails sent.",
+        });
       } catch (emailErr) {
         console.error("❌ Email Error:", emailErr);
         return res.status(500).json({ error: "Email sending failed" });
